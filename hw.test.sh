@@ -1,5 +1,6 @@
 #!/bin/bash
-
+#https://gist.github.com/adobkin/1066874
+#http://joxi.net/LmGnGbzURXqM3r
 OSNAME=""
 OSVER=""
 OSVERNUM=""
@@ -244,4 +245,5 @@ lspci:
 #chkmemory
 #chkcpu
 hwinfo 
+
 
