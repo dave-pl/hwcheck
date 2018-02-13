@@ -240,8 +240,8 @@ lspci:
     esac
 }
 
-soft
-chkmemory
-chkcpu
+#soft
+#chkmemory
+#chkcpu
 hwinfo 
 
