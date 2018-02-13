@@ -211,6 +211,7 @@ chkcpu() {
 hwinfo() {
     case $OSVER in
         CentOS | debian| Ubuntu)
+                #IFACES=`ip link show|egrep "(eth[0-9]*:|enp[0-9]*s[0-9]*:|enp[0-9][a-z][0-9][a-z][0-9]*:|em[0-9]*:|eno[0-9]*:)"|grep "state UP"|awk '{print $2}'|cut -f1,2 -d":"`
 		IFACES=`ip link show|grep "state UP"|awk '{print $2}'|cut -f1,2 -d":"`
         let memtotalGB=`head -n1 /proc/meminfo | awk '{print $2}'`/1024/1024
         let memtotalMB=`head -n1 /proc/meminfo | awk '{print $2}'`/1024
