@@ -245,3 +245,4 @@ soft
 chkmemory
 chkcpu
 hwinfo 
+
