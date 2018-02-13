@@ -19,15 +19,15 @@ if  [ "$OSNAME" == "Linux" ]; then
         OSVERNUM=`egrep -o '[0-9]+\.[0-9]+' /etc/redhat-release`
     fi
 #--------Debian--------------------
-    if  [ "$(cat /etc/issue.net|awk '{print $1}')" == "Debian" ]; then
-	    OSVER="debian"
-	    OSVERNUM=`cat /etc/debian_version`
-    fi
+	if [[ $(cat /etc/*release|grep -i "NAME="|grep -i debian) ]]; then
+  		OSVER="debian"
+  		OSVERNUM=$(cat /etc/debian_version |cut -f 1 -d ".")
+	fi    
 #------Ubuntu-------------------------------
-    if  [ "$(cat /etc/issue.net|awk '{print $1}')" == "Ubuntu" ]; then
-	    OSVER="Ubuntu"
-	    OSVERNUM=`cat /etc/issue.net|awk '{print $2,$3}'`
-    fi
+	if [[ $(cat /etc/*release|grep -i "NAME="|grep -i ubuntu) ]]; then
+  		OSVER="Ubuntu"
+  		OSVERNUM=`cat /etc/issue.net|awk '{print $2,$3}'`
+	fi
 fi
 
 soft() {
