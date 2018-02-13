@@ -242,6 +242,6 @@ lspci:
 }
 
 soft
-chkmemory
-chkcpu
+#chkmemory
+#chkcpu
 hwinfo 
