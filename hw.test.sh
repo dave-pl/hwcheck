@@ -21,7 +21,7 @@ if  [ "$OSNAME" == "Linux" ]; then
 #--------Debian--------------------
 	if [[ $(cat /etc/*release|grep -i "NAME="|grep -i debian) ]]; then
   		OSVER="debian"
-  		OSVERNUM=$(cat /etc/debian_version |cut -f 1 -d ".")
+  		OSVERNUM=$(cat /etc/debian_version)
 	fi    
 #------Ubuntu-------------------------------
 	if [[ $(cat /etc/*release|grep -i "NAME="|grep -i ubuntu) ]]; then
