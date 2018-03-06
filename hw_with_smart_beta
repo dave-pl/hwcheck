@@ -207,18 +207,21 @@ chkcpu() {
     esac
 }
 
-
 #------------------SMART-------------------------------#
 smart_test_no_raid() {
   if [[ "-z $(lspci|grep "RAID bus controller")" && "-z $(fdisk -l 2>/dev/null|grep /dev/nvme)" ]]; then
-    disk=$(fdisk -l 2>/dev/null| grep -i dev |egrep -v "(/dev/[brm])"| awk '/:/ {print $2}'| cut -f 1 -d ":")
-    for i in $disk; do echo ===$i===; smartctl -a $i|egrep '^(Self-test|Serial|Device M|  (5|8|9)|196|197|User|# (1|2))|result|remaining|defect';smartstatus=$?;echo "status $smartstatus";done
-    for i in $disk; do echo ===$i===; smartctl -t long $i;smartstatus=$?;echo "status $smartstatus";done
-      if [[ "$smartstatus" -ne 0 ]]; then
-        smartt="Please, run SMART test mannualy"
-      else
-        smartt="SMART testing has begun, please check"
-      fi
+    if [[ $(fdisk -l 2>/dev/null| grep -i dev |egrep -v "(/dev/[brm])"| awk '/:/ {print $2}'| cut -f 1 -d ":"|wc -l) -ge 2 ]];then
+      disk=$(fdisk -l 2>/dev/null| grep -i dev |egrep -v "(/dev/[brm])"| awk '/:/ {print $2}'| cut -f 1 -d ":")
+      for i in $disk; do echo ===$i===; smartctl -a $i|egrep '^(Self-test|Serial|Device M|  (5|8|9)|196|197|User|# (1|2))|result|remaining|defect';done
+      for i in $disk; do (echo ===$i===; smartctl -t long $i>>$MYPATH/result.txt);smartstatus=$?;done
+        if [[ "$smartstatus" -ne 0 ]]; then
+          smartt="Please, run SMART test mannualy"
+        else
+          smartt="SMART testing has begun, please check"
+        fi
+    else
+      smartt="Please, run SMART test mannualy"
+    fi
   fi
 }
 #------------------------------------------------------#
@@ -253,12 +256,14 @@ lspci:
 `lspci | egrep -i "ata|scsi|sas|raid|eth"`
 
 =================================== $smartt ===================================
+$(cat 2>/dev/null /root/install/result.txt|egrep 'Please wait|/dev/')
 ------------------------"
                 ;;
     esac
 }
-#soft
-#chkmemory
-#chkcpu
+soft
+chkmemory
+chkcpu
 smart_test_no_raid
 hwinfo
+
