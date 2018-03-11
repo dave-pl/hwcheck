@@ -223,6 +223,8 @@ smart_test_no_raid() {
     else
       smartt="Please, run SMART test mannualy"
     fi
+  else
+      smartt="Please, run SMART test mannualy"
   fi
 }
 #------------------------------------------------------#
