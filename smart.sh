@@ -1,78 +1,86 @@
 #!/bin/bash
 smart () {
-if [[ -z `lspci|grep -i "RAID bus controller"` ]]; then
-    if [[ -n $(fdisk -l 2>/dev/null|grep /dev/nvme) && -n $(lsblk|grep nvme) ]];then
-        echo "====== Intel NVME detected ======"
-        raidcard=nvme
-    else
-        echo "====== No raid controller detected ======"
-        raidcard=NoRaid
-    fi
-elif [[ -n `lspci|grep -i "RAID bus controller"|grep "MegaRAID"` && `smartctl --scan|grep -i megaraid` ]]; then
+if [[ -z $(lspci|grep "RAID bus controller") && -z $(fdisk -l 2>/dev/null|grep /dev/nvme) ]]; then
+  echo "====== No raid controller detected ======"
+  raidcard=NoRaid
+elif [[ `lspci|grep -i "RAID bus controller" |wc -l` -eq 1 ]]; then
+  if [[ -n `lspci|grep -i "RAID bus controller"|grep "MegaRAID"` ]]; then
     echo "====== MegaRAID raid controller detected ======"
     raidcard=MegaRAID
-elif [[ -n `lspci|grep -i "RAID bus controller"|grep "Hewlett-Packard"` && -z `lspci|grep -i "RAID bus controller"|egrep -i '(megaraid|nvme|adaptec)'` ]]; then
+  elif [[ -n `lspci|grep -i "RAID bus controller"|grep "Hewlett-Packard"` ]]; then
     echo "====== Hewlett-Packard raid controller detected ======"
     raidcard=Hewlett-Packard
-else
-    "I don't know this raid controller. Try run it manually"
+  elif [[ -n $(fdisk -l 2>/dev/null|grep /dev/nvme) ]]; then
+    echo "====== NVME detected ======"
+    raidcard=MVME
+  fi 
+elif [[ `lspci|grep -i "RAID bus controller" |wc -l` -ge 2 ]]; then
+  echo "====== 2 or more raid controllers detected ======"
 fi
+############################
 case "$raidcard" in
-    nvme )
-        let X=$(fdisk -l 2>/dev/null|grep /dev/nvme|wc -l)-1
-        for i in $(seq 0 $X); do echo "=== /dev/nvme$i ==="; nvme smart-log /dev/nvme$i;done
-        for i in $(seq 0 $X); do echo "=== /dev/nvme$i ==="; nvme intel smart-log-add /dev/nvme$i;done
-        ;;
-    NoRaid )
-        disk=`fdisk -l 2>/dev/null| grep -i dev |egrep -v "(/dev/[brm])"| awk '/:/ {print $2}'| cut -f 1 -d ":"`
-        for i in $disk; do echo ===$i===; smartctl -a $i|egrep '^(Self-test|Serial|Device M|  (5|8|9)|196|197|User|# (1|2))|result|remaining|defect';done
-        for i in $disk; do echo ===$i===; smartctl -t long $i;smartstatus=$?;echo "status $smartstatus";done
-            if [[ "$smartstatus" -ne 0 ]]; then
-            echo "Try run smartctl manually"
-            else
-                echo "====== SMART testig started ======"
-            fi
+  NoRaid )
+    if [[ $(fdisk -l 2>/dev/null| grep -i dev |egrep -v "(/dev/[brm])"| awk '/:/ {print $2}'| cut -f 1 -d ":"|wc -l) -ge 2 ]];then
+      disk=$(fdisk -l 2>/dev/null| grep -i dev |egrep -v "(/dev/[brm])"| awk '/:/ {print $2}'| cut -f 1 -d ":")
+      for i in $disk; do echo ===$i===; smartctl -a $i|egrep '^(Self-test|Serial|Device M|  (5|8|9)|196|197|User|# (1|2))|result|remaining|defect';done
+      for i in $disk; do (echo ===$i===; smartctl -t long $i>>$MYPATH/result.txt);smartstatus=$?;done
+        if [[ "$smartstatus" -ne 0 ]]; then
+          smartt="Please, run SMART test mannualy"
+        else
+          smartt="SMART testing has begun, please check"
+        fi
+    else
+      smartt="Please, run SMART test mannualy, maybe You have HW raid configured"
+    fi
     ;;
     MegaRAID )
-            disk=`fdisk -l 2>/dev/null| grep -i dev |egrep -v "(/dev/[brm])"| awk '/:/ {print $2}'| cut -f 1 -d ":"|wc -l`
+            disk=`fdisk -l | grep -i dev |egrep -v "(/dev/[bcache,md,ram])"| awk '/:/ {print $2}'| cut -f 1 -d ":"|wc -l`
             if [[ $disk -ge 2 ]]; then
-                let disk=$disk-1
-                for i in `seq 0 $disk`; do echo ===megaraid,$i===; smartctl -a -d megaraid,$i /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5|8|9)|196|197|User|# (1|2))|result|remaining|defect' ;smartstatus=$?; done
+                for i in `seq 1 $disk`; do echo ===megaraid,$i===; smartctl -a -d megaraid,$i /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5|8|9)|196|197|User|# (1|2))|result|remaining|defect' ;smartstatus=$?; done
+                echo "status $smartstatus"
                         if [[ "$smartstatus" -ne 0 ]]; then
-                                echo "===================== I do not know how to start testing in this case. Try run smartctl manually ====================="
+                                echo "===================== I do not know how to start testing in this case. Try run smartctl manually =====================" 
                                 echo "$(smartctl --scan)"
-                        else
-                            echo "====== SMART testig started ======"
                         fi
             else
-                echo "====== MegaRAID is alerady set up, You don't need SW RAID, trying start smart testing  ======"
-                for i in `seq 0 9` ; do echo ===megaraid,$i===; smartctl -a -d megaraid,$i /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5|8|9)|196|197|User|# (1|2))|result|remaining|defect' ; done
+                for i in `seq 0 9` ; do echo ===megaraid,$i===; smartctl -a -d megaraid,$i /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5|8|9)|196|197|User|# (1|2))|result|remaining|defect' ;smartstatus=$?; done
+                echo "status $smartstatus"
+                        if [[ "$smartstatus" -ne 0 ]]; then
+                                echo "===================== I do not know how to start testing in this case. Try run smartctl manually =====================" 
+                                echo "$(smartctl --scan)"
+                        fi
             fi
     ;;
     Hewlett-Packard )
     #193.29.187.101
-            disk=`fdisk -l 2>/dev/null| grep -i dev |egrep -v "(/dev/[brm])"| awk '/:/ {print $2}'| cut -f 1 -d ":"|wc -l`
+            disk=`fdisk -l | grep -i dev |egrep -v "(/dev/[bcache,md,ram])"| awk '/:/ {print $2}'| cut -f 1 -d ":"|wc -l`
+            echo $disk
             if [[ $disk -ge 2 ]]; then
-                let disk=$disk-1
-                for i in $(seq 0 $disk); do echo ===cciss,$i===; smartctl -d cciss,$i -a /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5)|196|197|User|# (1|2))|result|remaining|defect' ;smartstatus=$?;done
+                for i in `seq 0 $disk` ; do echo ===cciss,$i===; smartctl -d cciss,$i -a /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5)|196|197|User|# (1|2))|result|remaining|defect' ;smartstatus=$?; done
+                echo "status $smartstatus"
                         if [[ "$smartstatus" -ne 0 ]]; then
-                                        echo "===================== I do not know how to start testing in this case. Try run smartctl manually ====================="
+                                for i in `seq 0 11` ; do echo ===cciss,$i===; smartctl -d cciss,$i -a /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5)|196|197|User|# (1|2))|result|remaining|defect' ;smartstatus=$?; done
+                                    if [[ "$smartstatus" -ne 0 ]]; then
+                                        echo "===================== I do not know how to start testing in this case. Try run smartctl manually =====================" 
                                         echo "$(smartctl --scan)"
+                                    fi
                         else
-                            echo "====== SMART testig started ======"
+                            echo "====== SMART testig started ======"   
                         fi
             else
-                echo "====== HW RAID is alerady set up, You don't need SW RAID, trying start smart testing  ======"
-                for i in `seq 0 11` ; do echo ===cciss,$i===; smartctl -d cciss,$i -a /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5)|196|197|User|# (1|2))|result|remaining|defect'; done
+                for i in `seq 0 11` ; do echo ===cciss,$i===; smartctl -d cciss,$i -a /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5)|196|197|User|# (1|2))|result|remaining|defect' ;smartstatus=$?; done
+                echo "status $smartstatus"
+                        if [[ "$smartstatus" -ne 0 ]]; then
+                                echo "===================== I do not know how to start testing in this case. Try run smartctl manually =====================" 
+                                echo "$(smartctl --scan)"
+                        fi
             fi
     ;;
     * )
-        echo "there is not this raid controller in my database"
-        $(lspci|grep "RAID bus controller")
+    echo "there is not this raid controller in my database"
+    $(lspci|grep "RAID bus controller")
     ;;
 esac
+#############################
 }
 smart
-
-######на одном серере 2 рейд контроллера, диски только в одном
-######2 диска без рейд контроллера и 2 диска в nvme 54.37.248.14 + debian7 нету инфы в дефолтном месте по ос
