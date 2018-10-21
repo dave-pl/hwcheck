@@ -113,9 +113,6 @@ soft() {
     esac
 }
 
-chkmemory() {
-    case $OSVER in
-        CentOS | debian | Ubuntu )
 
 #--- SMART ---#
 smart () {
@@ -147,9 +144,9 @@ case "$raidcard" in
     #for i in `seq 0 9` ; do smartctl -d megaraid,$i -t long /dev/sg0 ; done;
     ;;
     Hewlett-Packard )
-    for i in `seq 0 11` ; do echo ===cciss,$i===; smartctl -d cciss,$i -a /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5)|196|197|User|# (1|2))|result|remaining|defect'; done
+    for i in `seq 0 11` ; do echo ===cciss,$i===; smartctl -d cciss,$i -a /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5|9)|196|197|User|# (1|2))|result|remaining|defect'; done
     #for i in `seq 0 11` ; do smartctl -d cciss,$i -t long /dev/sg0 ; done
-    ##for i in `seq 0 11` ; do echo ===cciss,$i===; smartctl -a -d sat+cciss,$i /dev/cciss/c0d0 | egrep '^(Self-test|Serial|Device M|  (5)|196|197|User|# (1|2))|result|remaining|defect' ;smartstatus=$?; done
+    ##for i in `seq 0 11` ; do echo ===cciss,$i===; smartctl -a -d sat+cciss,$i /dev/cciss/c0d0 | egrep '^(Self-test|Serial|Device M|  (5|9)|196|197|User|# (1|2))|result|remaining|defect' ;smartstatus=$?; done
     ##for i in `seq 0 11` ; do smartctl -t long -d sat+cciss,$i /dev/cciss/c0d0 ; done
     ;;
     * )
@@ -160,8 +157,9 @@ esac
 }
 #--- end of SMART ---#
 
-
-        
+chkmemory() {
+    case $OSVER in
+        CentOS | debian | Ubuntu )       
 #-------------autostart_Memtester---------------------------------------------------------------------------------------------------------------------------------------------
             rm -rf /root/install/mem*.log
             let memtotal=$(grep -ri memtotal /proc/meminfo|awk '{print $2}')
