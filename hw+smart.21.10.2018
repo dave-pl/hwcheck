@@ -1,32 +1,4 @@
 
-Skip to content
-
-    Features
-    Business
-    Explore
-    Marketplace
-    Pricing
-
-Sign in or Sign up
-
-0
-0
-
-    0
-
-dave-pl/hwcheck
-Code
-Issues 0
-Pull requests 0
-Projects 0
-Insights
-Join GitHub today
-
-GitHub is home to over 28 million developers working together to host and review code, manage projects, and build software together.
-hwcheck/hw.sh
-b2e243e on Feb 13
-@dave-pl dave-pl actual version of script
-249 lines (235 sloc) 9.06 KB
 #!/bin/bash
 #https://gist.github.com/adobkin/1066874
 #http://joxi.net/LmGnGbzURXqM3r
