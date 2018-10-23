@@ -136,15 +136,15 @@ case "$raidcard" in
     NoRaid )
     disk=$(fdisk -l 2>/dev/null| grep -i dev |egrep -v "(/dev/[brm])"| awk '/:/ {print $2}'| cut -f 1 -d ":")
     for i in $disk; do echo ===$i===; smartctl -a $i| egrep '^(Self-test|Serial|Device M|  (5|9)|197|User)|result|remaining|defect' ; done;
-    #for i in $disk; do echo ===$i===; smartctl -t long $i;done
+    for i in $disk; do echo ===$i===; smartctl -t long $i;done
     ;;
     MegaRAID )
     for i in `seq 0 9` ; do echo ===megaraid,$i===; smartctl -a -d megaraid,$i /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5|9)|197|User)|result|remaining|defect' ; done;
-    #for i in `seq 0 9` ; do smartctl -d megaraid,$i -t long /dev/sg0 ; done;
+    for i in `seq 0 9` ; do smartctl -d megaraid,$i -t long /dev/sg0 ; done;
     ;;
     Hewlett-Packard )
     for i in `seq 0 11` ; do echo ===cciss,$i===; smartctl -d cciss,$i -a /dev/sg0 | egrep '^(Self-test|Serial|Device M|  (5|9)|197|User)|result|remaining|defect' ; done;
-    #for i in `seq 0 11` ; do smartctl -d cciss,$i -t long /dev/sg0 ; done
+    for i in `seq 0 11` ; do smartctl -d cciss,$i -t long /dev/sg0 ; done
     ##for i in `seq 0 11` ; do echo ===cciss,$i===; smartctl -a -d sat+cciss,$i /dev/cciss/c0d0 | egrep '^(Self-test|Serial|Device M|  (5|9)|197|User)|result|remaining|defect' ; done;
     ##for i in `seq 0 11` ; do smartctl -t long -d sat+cciss,$i /dev/cciss/c0d0 ; done
     ;;
