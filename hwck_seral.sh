@@ -229,23 +229,23 @@ fi
 ############################
 case "$raidcard" in
     NoRaid )
-      for i in a b c d ;do smartctl -a /dev/sd$i | egrep -i 'Serial Number'>/dev/null; done;
+      for i in a b c d ;do (smartctl -a /dev/sd$i | egrep -i 'Serial Number';echo /dev/sd$)>/dev/null; done;
       if [[ $? -eq 0 ]]; then
         for i in a b c d ; do smartctl -a /dev/sd$i | egrep -i 'Serial Number';done
       fi
     ;;
     MegaRAID )
-      for i in `seq 0 3` ; do smartctl -a -d megaraid,$i /dev/sg0| egrep -i 'Serial Number' >/dev/null; done;
+      for i in `seq 0 3` ; do (smartctl -a -d megaraid,$i /dev/sg0| egrep -i 'Serial Number';echo /dev/sd$) >/dev/null; done;
       if [[ $? -eq 0 ]]; then
         for i in `seq 0 3` ; do smartctl -a -d megaraid,$i /dev/sg0|grep -i "Serial N"; done;
       fi
     ;;
     Hewlett-Packard )
-      for i in `seq 0 11` ; do smartctl -d cciss,$i -a /dev/sg0| egrep -i 'Serial Number' >/dev/null ; done
+      for i in `seq 0 11` ; do (smartctl -d cciss,$i -a /dev/sg0| egrep -i 'Serial Number';echo /dev/sd$) >/dev/null ; done
       if [[ $? -eq 0 ]]; then
         for i in `seq 0 11` ; do smartctl -d cciss,$i -a /dev/sg0 | egrep -i 'Serial N'; done
       else
-        for i in `seq 0 11` ; do smartctl -a -d sat+cciss,$i /dev/cciss/c0d0 | egrep -i 'Serial N' >/dev/null; done
+        for i in `seq 0 11` ; do (smartctl -a -d sat+cciss,$i /dev/cciss/c0d0 | egrep -i 'Serial N';echo /dev/sd$) >/dev/null; done
         if [[ $? -eq 0 ]]; then
           for i in `seq 0 11` ; do smartctl -a -d sat+cciss,$i /dev/cciss/c0d0 | egrep -i 'Serial N'; done
         fi
