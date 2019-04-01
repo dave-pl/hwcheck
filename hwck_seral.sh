@@ -229,9 +229,9 @@ fi
 ############################
 case "$raidcard" in
     NoRaid )
-      for i in a b c d ;do (smartctl -a /dev/sd$i | egrep -i 'Serial Number';echo /dev/sd$)>/dev/null; done;
+      for i in a b;do smartctl -a /dev/sd$i | egrep -i 'Serial Number'>/dev/null; done;
       if [[ $? -eq 0 ]]; then
-        for i in a b c d ; do smartctl -a /dev/sd$i | egrep -i 'Serial Number';done
+        for i in a b c d ; do echo /dev/sd$i;smartctl -a /dev/sd$i | egrep -i 'Serial Number';done
       fi
     ;;
     MegaRAID )
